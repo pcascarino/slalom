@@ -1,21 +1,29 @@
-source('./APP/Scraping/Scrap.R')
+source('./Scraping/Scrap.R')
 
-years_tab <- sort(give_years(), decreasing = TRUE)
+df_test <- read_csv('./Data/df_tidy_N1.csv')
 
-ID_compet <- give_id_race(years_tab) %>%
-  filter(annee == 2024)
+# years_tab <- sort(give_years(), decreasing = TRUE)
+# 
+# ID_compet <- give_id_race(years_tab) %>%
+#   filter(annee == 2024)
+# 
+# ID_compet <- ID_compet %>%
+#   filter(! ID_course  %in% c(20120470))
 
-ID_compet <- ID_compet %>%
-  filter(! ID_course  %in% c(20120470))
 
+###
+### Start
+###
 
+ 
 
 df_final <- data.frame()
 
 
-for(i in (1:nrow(ID_compet))){
+for(i in 1){#:nrow(ID_compet)){
+  id_c <- 20120465    
+  #id_c <- ID_compet$ID_course[i]
 
-  id_c <- ID_compet$ID_course[i]
   print(paste(i, ' :', nrow(ID_compet), ' =>', id_c))
   link_course <- paste0('http://www.ffcanoe.asso.fr/eau_vive/slalom/classement/courses/voir/', id_c)
 
@@ -46,26 +54,31 @@ for(i in (1:nrow(ID_compet))){
   abd_nbr <- length(which(content == "Abd" | content == "Des" | content == "Dsq"))/2
 
   delete_link <- c()
-  
-  if(abd_nbr != 0 ){
+
+  if(abd_nbr != 0){
     for(abd_n in 1:abd_nbr){
-      
+
       abd <- which(content == "Abd" | content == "Des" | content == "Dsq")[1]
       start_index <- abd - 6
-      
+
       end_index <- start_index
-      while (end_index <= (length(content) - 1)) {
-        if (content[end_index] == "" && content[end_index + 1] == "") {
+
+
+      while (!is.na(end_index) && end_index <= (length(content) - 3)) {
+
+        # We delete all before the first place of the next categorie
+        if (content[end_index] == "" && content[end_index + 1] == "" && content[end_index + 3] == "1") {
           break
         }
         end_index <- end_index + 1
       }
-      if (end_index < length(content) - 1) {
+
+      if (!is.na(end_index) && end_index < length(content) - 3) {
         # Supprimer les valeurs entre start_index et end_index (inclus)
         content <- content[-(start_index:end_index)]
       }
     }
-    
+
   }
 
 
@@ -112,38 +125,38 @@ for(i in (1:nrow(ID_compet))){
 
 
   df_temp$Embarcation <- ''
-  
+
   content_emb <- read_html(link_course) %>%
     html_nodes("th") %>%
     html_text() %>%
-    str_trim() %>% 
+    str_trim() %>%
     str_subset("^.{3}$") %>%
     str_subset("[A-Z]$")
-  
+
 
   n <- length(df_temp$Place)
   embarcation_count <- length(content_emb)
   embarcation_index <- 1
-  
+
   # Boucle pour remplir la colonne Embarcation
   for (i in 1:n) {
     if (df_temp$Place[i] == "1" && i != 1) {
       # Chaque fois que Place revient à "1" (sauf pour le premier élément)
       embarcation_index <- embarcation_index + 1
-      
+
       # Si l'indice dépasse le nombre d'embarcations disponibles, il revient au début
       if (embarcation_index > embarcation_count) {
         embarcation_index <- 1
       }
     }
-    
+
     # Remplissage de la colonne Embarcation
     df_temp$Embarcation[i] <- content_emb[embarcation_index]
   }
-  
+
   df_final <- bind_rows(df_final, df_temp)
 
-  save(df_final, file = './App/Data/df_final.RData')
+  #save(df_final, file = './Data/df_final1.RData')
 }
 
 
