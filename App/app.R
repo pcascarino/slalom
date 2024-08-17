@@ -1,217 +1,148 @@
-print(getwd())
 library(tidyverse)
 library(dplyr)
+
 library(shiny)
-library(shinythemes)
-library(shinyWidgets)
+library(bs4Dash)
 
-# Deployment guide 
-#https://medium.com/@rami.krispin/deploy-shiny-app-on-github-pages-b4cbd433bdc
-#https://www.youtube.com/watch?v=6y2FnAugP8E
+library(shinyauthr)
+
+# plot_colour <- "#8965CD"
+# 
+# theme <- create_theme(
+#   bs4dash_color(
+#     lime = "#52A1A5",
+#     olive = "#4A9094",
+#     purple = "#8965CD"
+#   ),
+#   bs4dash_status(
+#     primary = "#E1EDED",
+#     info = "#E4E4E4"
+#   )
+# )
 
 
-load('./Data/df_final1.RData')
+# Load data --------------------------------------------------------------------
 
-df_tidy <- df_final
-
-
+df_base <- read_csv('./Data/df_tidy_N1.csv')
 
 
-athletes <- tabPanel(
-  title = "Analyse des athlètes",
+# Info box value ---------------------------------------------------------------
+
+n_paddler <- length(unique(df_base$Nom))
+
+ui <- dashboardPage(
   
-
-  sidebarLayout(
-    
-    ###
-    ### Sidebar
-    ###
-    sidebarPanel(
-      width = 3,
-      h3("Filtrage :"),
-      
-      checkboxGroupInput(
-        inputId = "athlete_emb",
-        label = "Choix des embarcations :",
-        choices = list(
-          "C1" = "H",
-          "K1" = "D",
-          "C2" = "M"
-        ),
-        inline = TRUE,
-        selected = c('H','D', 'M')
+  title = "Slalom App",
+  
+  dark = FALSE,
+  help = NULL,
+  fullscreen = TRUE,
+  scrollToTop = TRUE,
+  
+  
+  header = dashboardHeader(
+    title = dashboardBrand(
+      title = "Slalom App",
+      image = "./img/logo.png"
+    )
+  ),
+  
+  
+  sidebar = dashboardSidebar(
+    sidebarMenu(
+      id = "sidebarMenuid",
+      menuItem(
+        "Accueil",
+        tabName = "home",
+        icon = icon("home")
       ),
-      
-      
-      checkboxGroupInput(
-        inputId = "athlete_sexe",
-        label = "Choix des sexes :",
-        choices = list(
-          "Homme" = "H",
-          "Femme" = "D",
-          "Mixte" = "M"
-        ),
-        inline = TRUE,
-        selected = c('H','D', 'M')
+      menuItem(
+        "Profils athlètes",
+        tabName = "athletes",
+        icon = icon("bar-chart")
       ),
-      
-      checkboxGroupInput(
-        inputId = "athlete_cat",
-        label = "Choix des catégories :",
-        choices = list(
-          "Minime : -15 ans" = "M",
-          "Cadet : 15-16 ans" = "C",
-          "Junior : 16-18 ans" = "J",
-          "Senior : 18-35 ans" = "S",
-          "Vétéran 1" = "V1",
-          "Vétéran 2" = "V2",
-          "Vétéran 3" = "V3",
-          "Vétéran 4" = "V4",
-          "Vétéran 5" = "V5"
-        ),
-        selected = c("M", "C", "J", "S", "V1", "V2", "V3", "V4", "V5" )
+      menuItem(
+        "Profils courses",
+        tabName = "courses",
+        icon = icon("bar-chart")
       ),
-      
-      sliderInput(
-        inputId="athlete_date",
-        label=HTML("Sélectionner les années"),
-        min=2001,
-        max=2024,
-        value=c(2001,2024),
-        step = 1
-      )
-      
-    ),
-    
-    
-    ###
-    ### Main Panel
-    ###
-    mainPanel(widht=9,
-              tabsetPanel(
-              id = "athletes_choix",
-              tabPanel("Tableau des classements",
-                       hr(),
-                       h3("En cours de développement"),
-                         
-                ),
-                tabPanel("Analyse d'un athlète", 
-                         HTML("<br>"),
-                         sidebarPanel(width = 4,
-                                      title = "",
-                                      pickerInput(
-                                        inputId = "athlete_athlete",
-                                        label = "Sélectionner un athlète",
-                                        choices = unique(df_tidy$Nom),
-                                        multiple = FALSE,
-                                        options = pickerOptions(
-                                          liveSearch = TRUE
-                                        )
-                                      )
-                         ),
-                         hr(),
-                      
-                
-              )
+      menuItem(
+        "Classement",
+        tabName = "classement",
+        icon = icon("bar-chart")
+      ),
+      menuItem(
+        "Prédictions",
+        tabName = "predictions",
+        icon = icon("bar-chart")
       )
     )
-  )
-)
-
-
-competitions <- tabPanel(
-  title = "Analyse des compétitions",
+  ),
   
-  sidebarLayout(
-    ###
-    ### Sidebar
-    ###
-    sidebarPanel(width = 3,
-                 title = "",
-    ),
-    
-    
-    ###
-    ### Main Panel
-    ###
-    mainPanel(widht=9,
-              tabsetPanel(
-                id = "compo_main_tabs",
-                tabPanel("Compositions/équipes", 
-                         hr(),
-                         
-                ),
-                tabPanel("Joueurs/individuel", 
-                         hr(),
-                         
-                         
-                )
-              )
+  controlbar = dashboardControlbar(),
+  footer = dashboardFooter(
+    left = "Slalom App",
+    right = "2024"
+  ),
+  
+  
+  body = dashboardBody(
+    tabItems(
+      tabItem(
+        tabName = "home",
+        
+        jumbotron(
+          title = "Bienvenue !",
+          status = "info",
+          lead = "Slalom App est un application test pour le canoë-kayak slalom en France",
+          btnName = "En savoir plus",
+          href=""
+        ),
+        
+        fluidRow(
+          userBox(
+            collapsible = FALSE,
+            title = userDescription(
+              title = "Paul CASCARINO",
+              subtitle = "C1M",
+              image = "",
+              type = 1
+            ),
+            status = "purple",
+            "Ajoute du texte"
+          ),
+          
+          box(
+            title = "Les Nouveautés",
+            width = 6,
+            collapsible = FALSE,
+            blockQuote(
+              "Une nouvelle box",
+              color = "purple"
+            )
+          )
+          
+        )
+        
+        
+      ),
+      tabItem(
+        tabName = "athletes"
+      ),
+      tabItem(
+        tabName = "courses"
+      ),
+      tabItem(
+        tabName = "classement"
+      ),
+      tabItem(
+        tabName = "predictions"
+      )
     )
   )
+  
 )
 
+server <- function(input, output) {}
 
-predictions <- tabPanel(
-  title = "Prédictions sur les futures courses",
-  
-  
-  sidebarLayout(
-    
-    ###
-    ### Sidebar
-    ###
-    sidebarPanel(width = 3,
-                 title = "",
-    ),
-    
-    
-    ###
-    ### Main Panel
-    ###
-    mainPanel(widht=9,
-              tabsetPanel(
-                id = "compo_main_tabs",
-                tabPanel("Compositions/équipes", 
-                         hr(),
-                         
-                ),
-                tabPanel("Joueurs/individuel", 
-                         hr(),
-                         
-                         
-                )
-              )
-    )
-  )
-)
-
-
-
-
-
-
-
-
-ui <- navbarPage(
-  title = "Canoe stats France ",
-  theme = shinytheme("cerulean"),
-  athletes,
-  competitions,
-  predictions
-)
-
-
-
-
-
-
-
-
-server <- function(input, output) {
-  
-}
-
-
-# Lancer l'application Shiny
-shinyApp(ui = ui, server = server)
+shinyApp(ui, server)
