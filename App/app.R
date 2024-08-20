@@ -23,7 +23,7 @@ library(shinyauthr)
 
 # Load data --------------------------------------------------------------------
 
-df_base <- read_csv('./Data/df_tidy_N1.csv')
+df_base <- read_csv('./Data/2024/df_2024.csv')
 
 
 # Info box value ---------------------------------------------------------------
@@ -126,8 +126,23 @@ ui <- dashboardPage(
         
         
       ),
+      
       tabItem(
-        tabName = "athletes"
+        tabName = "athletes",
+        fluidRow(
+          userBox(
+            collapsible = FALSE,
+            title = userDescription(
+              title = "Paul CASCARINO",
+              subtitle = "C1M",
+              image = "",
+              type = 1
+            ),
+            status = "purple",
+            "Ajoute du texte"
+          )
+        )
+        
       ),
       tabItem(
         tabName = "courses"

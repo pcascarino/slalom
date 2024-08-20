@@ -1,36 +1,16 @@
-load('./Data/df_final1.RData')
+source('./Scraping/Scrap.R')
 
+years_tab <- sort(give_years(), decreasing = TRUE)
 
-df_pas_ok <- df_final %>%
-  filter(is.na(as.numeric(Dossard)))
+ID_compet <- give_id_race(years_tab) %>%
+  filter(annee == 2024)
 
-id_pas_ok <- unique(df_pas_ok$ID_course)
+ID_compet <- ID_compet %>%
+  filter(! ID_course  %in% c(20120470, 20120376, 20120465))
 
-print(id_pas_ok)
+ID_compet_N1 <- ID_compet %>%
+  filter(
+    ID_course %in% c(20120427)
+  )
 
-# 20120329 est ok juste 0 à la fin
-# 20120324 est ok juste 0 à la fin
-# 20120418 est ok juste 0 à la fin
-
-
-# 20120447 pas ok et important (N1)
-# 20120445
-# 20120429 
-# 20120427
-# 20120401 
-# 20120399 
-
-# 20120465 même pb
-
-
-df_tidy <- df_final %>%
-  filter(!ID_course %in% c(
-    20120376,  # Pas le même nbr de portes pour les c2
-    20120447,  # pas ok et important (N1)
-    20120445,
-    20120429,
-    20120427,
-    20120401,
-    20120399,
-    20120465   # même pb
-  ))
+df_N1 <- scrap_course(ID_compet_N1, isN1=TRUE, link_rdata='./Data/2024/20120427.RData')
