@@ -1,0 +1,111 @@
+```{r}
+library(dplyr)
+library(stringr)
+library(lme4)
+library(ggplot2)
+
+df_2024 <- read.csv('../Data/2024.csv') %>%
+  select(-c("X", "X.1"))
+
+df_2023 <- read.csv('../Data/2023.csv') %>%
+  select(-X)
+
+
+df_all <- rbind(df_2024, df_2023)
+```
+
+
+```{r}
+df_n1 <- df_all %>%
+  filter(str_detect(Type, "National 1"),
+         Embarcation != "Inv",
+         Embarcation != "INV")
+
+df_ml <- df_n1 %>%
+  select(Temps_pur, Embarcation, Cat, Valeur, NumCourse, NomCompet) %>%
+  mutate(Embarcation = as.factor(Embarcation),
+         Cat = as.factor(Cat),
+         Valeur = as.integer(Valeur),
+         NumCourse = as.factor(NumCourse),
+         NomCompet = as.factor(NomCompet))
+
+
+modele <- lm(Temps_pur ~ Embarcation + Cat + Valeur + NumCourse + NomCompet, data = df_ml)
+
+summary(modele)
+```
+
+```{r}
+df_n1 <- df_all %>%
+  filter(str_detect(Type, "National 1"),
+         Embarcation != "Inv",
+         Embarcation != "INV")
+
+df_ml <- df_n1 %>%
+  select(Temps_pur, Embarcation, Cat, Valeur, NumCourse, NomCompet, Nom) %>%
+  mutate(Temps_pur = as.numeric(Temps_pur),
+         Embarcation = as.factor(Embarcation),
+         Cat = as.factor(Cat),
+         Valeur = as.integer(Valeur),
+         NumCourse = as.factor(NumCourse),
+         NomCompet = as.factor(NomCompet))
+
+
+modele_mixte <- lmer(Temps_pur ~ Embarcation + Cat + Valeur + NumCourse + NomCompet + (1|Nom), data = df_ml)
+
+df_ml$pred <- predict(modele_mixte)
+
+
+
+summary(modele_mixte)
+
+ggplot(df_ml, 
+       aes(x=Temps_pur, y=pred, color=Embarcation)) +
+  geom_point() + 
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "red") 
+```
+
+
+```{r}
+surcote <- function(Nom_de_laccuse) {
+  df_temp <- df_ml %>%
+    filter(Nom == Nom_de_laccuse) %>%
+    mutate(Cotage = Temps_pur - pred)
+  return(sum(df_temp$Cotage, na.rm = TRUE))
+}
+
+df_surcote <- data.frame(Nom = unique(df_ml$Nom))
+cote <- numeric(nrow(df_surcote))  # Initialiser cote comme un vecteur numérique
+
+for(i in seq_along(df_surcote$Nom)) {
+  cote[i] <- surcote(df_surcote$Nom[i])[[1]]  # Utiliser le nom du DataFrame df_surcote
+}
+
+df_surcote$cote <- cote
+
+ggplot(df_surcote, aes(x = cote)) +
+  geom_histogram(binwidth = 1) +
+  labs(title = "Histogramme des Cotes",
+       x = "Cote",
+       y = "Fréquence") +
+  theme_minimal()
+```
+
+```{r}
+df_c1 <- df_ml %>%
+  filter(Embarcation == 'C1H') %>%
+  group_by(Nom) %>%
+  summarise(
+    pred = mean(pred),
+    valeur = mean(Valeur),
+    Temps_pur = mean(Temps_pur)
+  )
+
+ggplot(df_c1, aes(x = valeur, y = pred)) + 
+  geom_point() +  # Trace les points
+  geom_text(aes(label = Nom, color=Temps_pur), vjust = -0.5, hjust = 0.5) +  # Ajoute les labels près des points
+  labs(title = "Relation entre Valeur et Prédiction", 
+       x = "Valeur", 
+       y = "Prédiction") +
+  theme_minimal()
+```
