@@ -1,0 +1,15 @@
+Package: scrapffck
+Title: Scrap the data from the FFCK (French Federation of Canoe Slalom)
+Version: 0.0.0.9000
+Authors@R: 
+    person("Paul", "Cascarino", , "paul.cascarino@laposte.net", role = c("aut", "cre"))
+Description: Include some functions whose permit to convert the data from the ffck official website to a csv format.
+Depends: R (>= 3.4.3)
+License: GPL-3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Imports: 
+    dplyr,
+    rvest,
+    stringr
