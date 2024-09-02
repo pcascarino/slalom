@@ -13,7 +13,7 @@ verif_course <- function(df_test){
 
   nombre_chiffres <- sum(grepl("^[0-9]+$", df_test$Nom))
 
-  return(nombre_chiffres > nrow(df_test)/10)
+  return(! nombre_chiffres > nrow(df_test)/10)
 }
 
 

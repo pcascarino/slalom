@@ -15,52 +15,65 @@
 #' @export
 maj_data <- function(link_database_csv, link_error_csv){
 
-  delete_course <- c(20120470) # Chmpt de France par équipe
+  if (!file.exists(link_database_csv)) {
+    #write.csv(data.frame(), file = link_database_csv)
+    db_csv <- data.frame()
+  }else{
+    db_csv <- read.csv(link_database_csv)
+  }
 
-  db_csv <- read.csv(link_database_csv)
-  error_csv <- read.csv(link_error_csv)
+  if (!file.exists(link_error_csv)) {
+    #write.csv(data.frame(), file = link_database_csv)
+    error_csv <- data.frame()
+  }else{
+    error_csv <- read.csv(link_database_csv)
+  }
 
-  years <- give_years()
+  delete_course <- c(20120470) # Chpt de France par équipe
+
+
+  years <- desgive_years()
   years <- sort(years, decreasing = TRUE)
 
 
   for(year in years){
     # if our data countains all penalities and gates
-    if(year > 2023){
+    if(year > 2020){
       year_course_df <- give_id_race(year)
 
-      for(i in 1:3){#nrow(year_course_df)){
+      for(i in 1:nrow(year_course_df)){
 
-        if(year_course_df$ID_course[i] %in% db_csv$ID_course){
-          print(paste0('(', i, '/', nrow(year_course_df), ') - ', year, ' : ', year_course_df$ID_course[i], 'En base'))
+        if(year_course_df$ID_course[i] %in% unique(db_csv$ID_course)){
+          print(paste0('(', i, '/', nrow(year_course_df), ') - ', year, ' : ', year_course_df$ID_course[i], ' [En base]'))
         }else if(year_course_df$ID_course[i] %in% delete_course){
-            print(paste0('(', i, '/', nrow(year_course_df), ') - ', year, ' : ', year_course_df$ID_course[i], 'PAS OK'))
+            print(paste0('(', i, '/', nrow(year_course_df), ') - ', year, ' : ', year_course_df$ID_course[i], ' [PAS OK]'))
         }
         else{
           print(paste0('(', i, '/', nrow(year_course_df), ') - ', year, ' : ', year_course_df$ID_course[i]))
 
 
           df_temp <- scrap_course(year_course_df$ID_course[i], year_course_df$ID_competition[i], year, isN1=FALSE)
-          df_temp <- df_temp[names(df_temp) %in% names(db_csv)]
-          db_csv <- rbind(db_csv, df_temp)
+
           if(verif_course(df_temp)){
             db_csv <- rbind(db_csv, df_temp)
           }else{
+            print("Test du format N1 ...")
             df_temp <- scrap_course(year_course_df$ID_course[i], year_course_df$ID_competition[i], year, isN1=TRUE)
             if(verif_course(df_temp)){
               db_csv <- rbind(db_csv, df_temp)
             }else{
+              print('Erreur')
               error_csv <- rbind(error_csv, df_temp)
             }
           }
 
-        }
-
-
+        write.csv(db_csv, file=link_database_csv, row.names = FALSE)
+        write.csv(error_csv, file=link_error_csv, row.names = FALSE)
       }
 
 
     }
   }
 
+  }
 }
