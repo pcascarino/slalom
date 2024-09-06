@@ -1,4 +1,0 @@
-clean_data              Clean and convert data columns to numeric
-create_gate_df          Create a DataFrame of gate results from a race
-plot_course_time        Plot the distribution of athletes based on race
-                        results

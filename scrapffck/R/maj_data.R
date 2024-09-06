@@ -26,19 +26,19 @@ maj_data <- function(link_database_csv, link_error_csv){
     #write.csv(data.frame(), file = link_database_csv)
     error_csv <- data.frame()
   }else{
-    error_csv <- read.csv(link_database_csv)
+    error_csv <- read.csv(link_error_csv)
   }
 
-  delete_course <- c(20120470) # Chpt de France par équipe
+  delete_course <- c(20120470, 20119847, 20119742, 20119645) # Chpt de France par équipe
 
 
-  years <- desgive_years()
+  years <- give_years()
   years <- sort(years, decreasing = TRUE)
 
 
   for(year in years){
     # if our data countains all penalities and gates
-    if(year > 2020){
+    if(year > 2010){
       year_course_df <- give_id_race(year)
 
       for(i in 1:nrow(year_course_df)){
